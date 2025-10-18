@@ -12,7 +12,9 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
     const helloWorldFunction = new lambda.Function(this, 'HelloWorldFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/hello-world')),
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, '../lambda/hello-world')
+      ),
       timeout: cdk.Duration.seconds(30),
       environment: {
         NODE_ENV: 'production',
@@ -26,14 +28,22 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key'],
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+        ],
       },
     });
 
     // Lambda統合の作成
-    const helloWorldIntegration = new apigateway.LambdaIntegration(helloWorldFunction, {
-      requestTemplates: { 'application/json': '{ "statusCode": "200" }' },
-    });
+    const helloWorldIntegration = new apigateway.LambdaIntegration(
+      helloWorldFunction,
+      {
+        requestTemplates: { 'application/json': '{ "statusCode": "200" }' },
+      }
+    );
 
     // APIエンドポイントの作成
     api.root.addMethod('GET', helloWorldIntegration);

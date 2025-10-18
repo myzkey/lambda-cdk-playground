@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+cdk.out/
+*.d.ts
+*.js
+!jest.config.js
+!eslint.config.js
+
+# Lambda compiled files
+lambda/**/dist/
+lambda/**/*.js
+lambda/**/*.d.ts
+
+# CDK
+.cdk.staging/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# OS files
+.DS_Store
+Thumbs.db

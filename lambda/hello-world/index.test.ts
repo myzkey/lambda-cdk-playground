@@ -1,12 +1,12 @@
 import { handler } from './index';
-import { APIGatewayProxyEvent, Context } from 'aws-lambda';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 describe('Lambda handler', () => {
   it('should return hello world message', async () => {
     const event: Partial<APIGatewayProxyEvent> = {
       queryStringParameters: null,
       requestContext: {
-        requestId: 'test-request-id'
+        requestId: 'test-request-id',
       } as any,
     };
 
@@ -28,7 +28,7 @@ describe('Lambda handler', () => {
     const event: Partial<APIGatewayProxyEvent> = {
       queryStringParameters: { name: 'Alice' },
       requestContext: {
-        requestId: 'test-request-id-2'
+        requestId: 'test-request-id-2',
       } as any,
     };
 
