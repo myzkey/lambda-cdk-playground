@@ -10,10 +10,11 @@ export const homeHandler = async (
   const availableEndpoints = [
     { method: 'GET', path: '/', description: 'API overview' },
     { method: 'GET', path: '/hello', description: 'Hello world message' },
+    { method: 'GET', path: '/health', description: 'Health check' },
     { method: 'GET', path: '/api/users', description: 'Get all users' },
     { method: 'GET', path: '/api/users/:id', description: 'Get user by ID' },
     { method: 'POST', path: '/api/users', description: 'Create new user' },
-    { method: 'GET', path: '/health', description: 'Health check' },
+    { method: 'POST', path: '/api/webhook/send', description: 'Send webhook message' },
   ];
 
   return {

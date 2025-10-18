@@ -85,6 +85,18 @@ async function testEndpoints() {
       ),
     },
     {
+      name: 'POST /api/webhook/send - Send webhook',
+      event: createTestEvent(
+        'POST',
+        '/api/webhook/send',
+        null,
+        JSON.stringify({
+          message: 'Test webhook message from Lambda CDK Playground',
+          type: 'generic',
+        })
+      ),
+    },
+    {
       name: 'GET /unknown - 404 test',
       event: createTestEvent('GET', '/unknown'),
     },
