@@ -45,12 +45,17 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
       }
     );
 
-    // APIエンドポイントの作成
-    api.root.addMethod('GET', helloWorldIntegration);
+    // プロキシ統合を使用してすべてのパスとメソッドを単一のLambda関数にルーティング
+    api.root.addProxy({
+      defaultIntegration: helloWorldIntegration,
+      anyMethod: true,
+    });
 
-    // helloリソースとエンドポイントの作成
-    const helloResource = api.root.addResource('hello');
-    helloResource.addMethod('GET', helloWorldIntegration);
+    // ルートレベルでのメソッド追加
+    api.root.addMethod('GET', helloWorldIntegration);
+    api.root.addMethod('POST', helloWorldIntegration);
+    api.root.addMethod('PUT', helloWorldIntegration);
+    api.root.addMethod('DELETE', helloWorldIntegration);
 
     // 出力値の定義
     new cdk.CfnOutput(this, 'ApiUrl', {
