@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
@@ -74,21 +75,27 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
       GIT_COMMIT: process.env.GIT_COMMIT || '',
       GIT_BRANCH: process.env.GIT_BRANCH || '',
       DEPLOYMENT_ID: process.env.DEPLOYMENT_ID || '',
+
+      // Webhook認証設定
+      GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET || '',
+      AWS_WEBHOOK_SECRET: process.env.AWS_WEBHOOK_SECRET || '',
+      WEBHOOK_PATH_SECRET: process.env.WEBHOOK_PATH_SECRET || '',
     };
 
     // Lambda関数の作成
     const helloWorldFunction = new lambda.Function(this, 'HelloWorldFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      functionName: 'lambda-cdk-playground-api',
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
       code: lambda.Code.fromAsset(
         path.join(__dirname, '../lambda/hello-world')
       ),
       timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.TWO_WEEKS,
       environment: {
         NODE_ENV: 'production',
         APP_CONFIG_PARAM: appConfigParam.parameterName,
         API_SECRET_ARN: apiSecret.secretArn,
-        AWS_REGION: this.region,
         // ビルド時環境変数を追加
         ...buildTimeEnvVars,
       },
@@ -100,10 +107,43 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
     // Lambda関数にSecrets Managerの読み取り権限を付与
     apiSecret.grantRead(helloWorldFunction);
 
+    // GitHub Webhook IPレンジ (https://api.github.com/meta から取得)
+    const githubHookIpRanges = [
+      '192.30.252.0/22',
+      '185.199.108.0/22',
+      '140.82.112.0/20',
+      '143.55.64.0/20'
+    ];
+
+    // AWS SNS IPレンジ (ap-northeast-1)
+    const awsSnsIpRanges = [
+      '52.69.0.0/16',
+      '54.238.0.0/16',
+      '3.112.0.0/14'
+    ];
+
+    // API Gateway リソースポリシー（GitHubとAWS IPのみ許可）
+    const apiPolicy = new iam.PolicyDocument({
+      statements: [
+        new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          principals: [new iam.AnyPrincipal()],
+          actions: ['execute-api:Invoke'],
+          resources: ['execute-api:/*/*/*'],
+          conditions: {
+            IpAddress: {
+              'aws:SourceIp': [...githubHookIpRanges, ...awsSnsIpRanges]
+            }
+          }
+        })
+      ]
+    });
+
     // API Gatewayの作成
     const api = new apigateway.RestApi(this, 'HelloWorldApi', {
       restApiName: 'Hello World Service',
       description: 'This service serves a simple hello world response.',
+      policy: apiPolicy,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
@@ -135,6 +175,22 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
     api.root.addMethod('POST', helloWorldIntegration);
     api.root.addMethod('PUT', helloWorldIntegration);
     api.root.addMethod('DELETE', helloWorldIntegration);
+
+    // Rate limiting (API Key不要でのスロットリング)
+    const usagePlan = new apigateway.UsagePlan(this, 'WebhookUsagePlan', {
+      name: 'WebhookUsagePlan',
+      description: 'Usage plan for webhook API access',
+      throttle: {
+        rateLimit: 100,    // 1秒あたり100リクエスト
+        burstLimit: 200,   // バースト時200リクエスト
+      },
+    });
+
+    // Usage Plan に API Stage を追加
+    usagePlan.addApiStage({
+      api: api,
+      stage: api.deploymentStage,
+    });
 
     // 出力値の定義
     new cdk.CfnOutput(this, 'ApiUrl', {

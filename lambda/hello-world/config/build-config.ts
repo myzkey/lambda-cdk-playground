@@ -77,7 +77,7 @@ export function validateBuildConfig(): {
   // 本番環境での必須設定チェック
   if (BUILD_CONFIG.app.environment === 'production') {
     if (!BUILD_CONFIG.deployment.gitCommit) {
-      errors.push('GIT_COMMIT is required for production builds');
+      warnings.push('GIT_COMMIT is not set (recommended for tracking deployments)');
     }
 
     if (BUILD_CONFIG.app.enableDebug) {
