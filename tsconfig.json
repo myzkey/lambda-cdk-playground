@@ -4,6 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["es2022"],
+    "outDir": "./dist/cdk",
+    "rootDir": "./",
     "declaration": true,
     "strict": true,
     "noImplicitAny": true,
@@ -20,5 +22,6 @@
     "strictPropertyInitialization": false,
     "typeRoots": ["./node_modules/@types"]
   },
-  "exclude": ["node_modules", "cdk.out"]
+  "include": ["bin/**/*", "lib/**/*", "test/**/*", "scripts/**/*"],
+  "exclude": ["node_modules", "cdk.out", "dist", "lambda"]
 }

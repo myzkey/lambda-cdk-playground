@@ -102,7 +102,7 @@ export const createUserHandler = async (
 
   try {
     requestBody = JSON.parse(event.body || '{}');
-  } catch (error) {
+  } catch {
     return {
       statusCode: 400,
       headers: DEFAULT_HEADERS,

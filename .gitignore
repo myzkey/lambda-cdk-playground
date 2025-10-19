@@ -1,7 +1,11 @@
-# Compiled JavaScript files
+# Compiled JavaScript files and TypeScript declarations
 *.js
 !jest.config.js
+!eslint.config.js
 *.d.ts
+
+# Build output directory (all compiled files)
+dist/
 
 # Node.js dependencies
 node_modules/
@@ -10,11 +14,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Lambda compiled output
+# Legacy build outputs (to be cleaned up)
 lambda/**/dist/
 lambda/**/*.js
 lambda/**/*.d.ts
 !lambda/**/*.test.js
+bin/*.js
+lib/*.js
+test/*.js
+scripts/*.js
 
 # CDK asset staging directory
 .cdk.staging

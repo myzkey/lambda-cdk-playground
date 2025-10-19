@@ -23,11 +23,11 @@ export const sendWebhookHandler = async (
     }
 
     // リクエストボディを解析
-    let body: any = {};
+    let body: unknown = {};
     if (event.body) {
       try {
         body = JSON.parse(event.body);
-      } catch (error) {
+      } catch {
         return {
           statusCode: 400,
           headers: DEFAULT_HEADERS,
@@ -37,6 +37,21 @@ export const sendWebhookHandler = async (
           }),
         };
       }
+    }
+
+    // 型ガードでbodyの形状を確認
+    const isValidBody = (obj: unknown): obj is { message?: string; type?: string } => {
+      return typeof obj === 'object' && obj !== null;
+    };
+
+    if (!isValidBody(body)) {
+      return {
+        statusCode: 400,
+        headers: DEFAULT_HEADERS,
+        body: JSON.stringify({
+          error: 'Invalid request body format',
+        }),
+      };
     }
 
     const { message, type = 'generic' } = body;

@@ -20,7 +20,7 @@ const secretsClient = new SecretsManagerClient({
 // キャッシュ用のインターfaces
 interface ConfigCache {
   [key: string]: {
-    value: any;
+    value: unknown;
     timestamp: number;
     ttl: number;
   };
@@ -42,7 +42,7 @@ export async function getParameter(
   // キャッシュから確認
   if (cache[cacheKey] && Date.now() - cache[cacheKey].timestamp < cache[cacheKey].ttl) {
     console.log(`[Config] Cache hit for parameter: ${parameterName}`);
-    return cache[cacheKey].value;
+    return cache[cacheKey].value as string | null;
   }
 
   try {
@@ -84,7 +84,7 @@ export async function getParameters(
   for (const paramName of parameterNames) {
     const cacheKey = `param:${paramName}`;
     if (cache[cacheKey] && Date.now() - cache[cacheKey].timestamp < cache[cacheKey].ttl) {
-      result[paramName] = cache[cacheKey].value;
+      result[paramName] = cache[cacheKey].value as string;
     } else {
       uncachedParams.push(paramName);
     }

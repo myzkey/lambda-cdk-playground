@@ -67,9 +67,12 @@ export class Router {
       try {
         // パスパラメータをeventに追加
         const pathParams = this.extractPathParams(paramRoute.route.path, path);
-        (event as any).pathParameters = { ...event.pathParameters, ...pathParams };
+        const modifiedEvent = {
+          ...event,
+          pathParameters: { ...event.pathParameters, ...pathParams }
+        };
 
-        return await paramRoute.route.handler(event);
+        return await paramRoute.route.handler(modifiedEvent);
       } catch (error) {
         console.error('[Router] Handler error:', error);
         return this.createErrorResponse(500, 'Internal Server Error');
@@ -136,7 +139,7 @@ export class Router {
   private createErrorResponse(
     statusCode: number,
     error: string,
-    additionalData?: Record<string, any>
+    additionalData?: Record<string, unknown>
   ): APIGatewayProxyResult {
     return {
       statusCode,

@@ -2,15 +2,19 @@
   "name": "lambda-cdk-playground",
   "version": "0.1.0",
   "bin": {
-    "lambda-cdk-playground": "bin/lambda-cdk-playground.js"
+    "lambda-cdk-playground": "dist/cdk/bin/lambda-cdk-playground.js"
   },
   "scripts": {
-    "build": "tsc && pnpm run build:lambda",
+    "clean": "rm -rf dist lambda/dist bin/*.js lib/*.js test/*.js scripts/*.js && find lambda -name '*.js' -not -name '*.test.js' -delete",
+    "build": "pnpm run clean && tsc && pnpm run build:lambda",
     "build:lambda": "tsc -p lambda/tsconfig.json",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "deploy": "pnpm run build && cdk deploy",
+    "deploy": "pnpm run build && cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "destroy:clean": "pnpm run destroy && pnpm run reset",
+    "reset": "rm -rf cdk.out cdk.context.json",
     "synth": "pnpm run build && cdk synth",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",

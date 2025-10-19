@@ -178,14 +178,22 @@ curl -X POST https://your-api-id.execute-api.region.amazonaws.com/prod/api/users
 
 ## 利用可能なコマンド
 
+### ビルドとデプロイ
+
+- `pnpm run clean` - ビルド成果物をクリーンアップ
 - `pnpm run build` - TypeScriptをJavaScriptにコンパイル
 - `pnpm run build:lambda` - Lambda関数のみをビルド
 - `pnpm run watch` - ファイル変更を監視してコンパイル
 - `pnpm run test` - Jest単体テストを実行
 - `pnpm run synth` - CloudFormationテンプレートを生成
-- `pnpm run deploy` - スタックをAWSにデプロイ
+- `pnpm run deploy` - スタックをAWSにデプロイ（自動承認）
 - `pnpm cdk diff` - デプロイされたスタックと現在の状態を比較
-- `pnpm cdk destroy` - スタックを削除
+
+### スタック削除とリセット
+
+- `pnpm run destroy` - CDKスタックを強制削除
+- `pnpm run reset` - CDKの状態ファイル（cdk.out, cdk.context.json）をリセット
+- `pnpm run destroy:clean` - スタック削除 + 状態リセットを一度に実行
 
 ### ローカル開発用コマンド
 
@@ -233,6 +241,98 @@ lambda/hello-world/
 3. **Jest テスト**: `pnpm test` で単体テスト実行
 4. **本格テスト**: `pnpm run local:start` でAWS環境に近いテスト（オプション）
 5. **デプロイ**: `pnpm run deploy` でAWSへデプロイ
+
+## スタック削除とクリーンアップ
+
+### 基本的な削除コマンド
+
+```bash
+# CDKスタックのみを削除
+pnpm run destroy
+
+# CDKの状態ファイルのみをリセット
+pnpm run reset
+
+# スタック削除 + 状態リセットを一度に実行（推奨）
+pnpm run destroy:clean
+```
+
+### 削除コマンドの詳細
+
+#### `pnpm run destroy`
+- **機能**: AWSのCDKスタック（Lambda関数、API Gateway等）を強制削除
+- **対象リソース**:
+  - Lambda関数: `lambda-cdk-playground-api`
+  - API Gateway: REST API とエンドポイント
+  - CloudWatch ログ: `/aws/lambda/lambda-cdk-playground-api`
+  - IAM ロール・ポリシー: Lambda実行用
+  - Secrets Manager: API シークレット
+  - SSM Parameter Store: 設定パラメータ
+- **実行時間**: 約1-2分
+- **注意**: 削除は不可逆的です。必要に応じてデータのバックアップを行ってください
+
+#### `pnpm run reset`
+- **機能**: CDKのローカル状態ファイルをクリーンアップ
+- **削除ファイル**:
+  - `cdk.out/` - CDK合成結果
+  - `cdk.context.json` - CDKコンテキストキャッシュ
+- **用途**: デプロイエラー解決、状態不整合の修正
+
+#### `pnpm run destroy:clean`
+- **機能**: `destroy` + `reset` を順次実行
+- **推奨使用ケース**:
+  - プロジェクトの完全削除
+  - 開発環境のリセット
+  - デプロイ問題の解決
+
+### エラー対応ガイド
+
+#### スタックが `UPDATE_ROLLBACK_FAILED` 状態の場合
+```bash
+# 強制削除を実行
+pnpm run destroy
+
+# 状態をリセット
+pnpm run reset
+
+# 新規デプロイ
+pnpm run deploy
+```
+
+#### ロググループが既に存在するエラー
+```bash
+# 既存のスタックを完全削除
+pnpm run destroy:clean
+
+# 新規デプロイ
+pnpm run deploy
+```
+
+#### CDKコンテキストの不整合
+```bash
+# コンテキストキャッシュをクリア
+pnpm run reset
+
+# 再度合成・デプロイ
+pnpm run deploy
+```
+
+### 削除確認方法
+
+**AWSコンソールでの確認**:
+1. **CloudFormation**: スタック `LambdaCdkPlaygroundStack` が削除されていること
+2. **Lambda**: 関数 `lambda-cdk-playground-api` が削除されていること
+3. **API Gateway**: REST API が削除されていること
+4. **CloudWatch**: ロググループが削除されていること
+
+**コマンドラインでの確認**:
+```bash
+# スタックの存在確認
+aws cloudformation describe-stacks --stack-name LambdaCdkPlaygroundStack
+
+# Lambda関数の確認
+aws lambda list-functions --query 'Functions[?FunctionName==`lambda-cdk-playground-api`]'
+```
 
 ### トラブルシューティング
 

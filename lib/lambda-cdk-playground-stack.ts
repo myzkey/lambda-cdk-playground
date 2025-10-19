@@ -82,6 +82,13 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
       WEBHOOK_PATH_SECRET: process.env.WEBHOOK_PATH_SECRET || '',
     };
 
+    // CloudWatch Log Group for Lambda function (import existing)
+    const helloWorldLogGroup = logs.LogGroup.fromLogGroupName(
+      this,
+      'HelloWorldFunctionLogs',
+      '/aws/lambda/lambda-cdk-playground-api'
+    );
+
     // Lambda関数の作成
     const helloWorldFunction = new lambda.Function(this, 'HelloWorldFunction', {
       functionName: 'lambda-cdk-playground-api',
@@ -91,7 +98,7 @@ export class LambdaCdkPlaygroundStack extends cdk.Stack {
         path.join(__dirname, '../lambda/hello-world')
       ),
       timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.TWO_WEEKS,
+      logGroup: helloWorldLogGroup,
       environment: {
         NODE_ENV: 'production',
         APP_CONFIG_PARAM: appConfigParam.parameterName,
